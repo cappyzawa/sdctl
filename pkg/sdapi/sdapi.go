@@ -58,6 +58,11 @@ type eventResponse struct {
 	PipelineID int `json:"pipelineId"`
 }
 
+type bannerResponse struct {
+	ID int `json:"id"`
+	Message string `json:"message"`
+}
+
 // New creates a SDAPI
 func New(sdctx sdctl_context.SdctlContext, httpClient *http.Client) (SDAPI, error) {
 	u, err := url.Parse(sdctx.APIURL)
@@ -127,6 +132,20 @@ func (sd *SDAPI) GetJWT() (string, error) {
 	err = json.NewDecoder(res.Body).Decode(tokenResponse)
 
 	return tokenResponse.JWT, err
+}
+
+func (sd *SDAPI) GetBanners() ([]bannerResponse, error) {
+	path := "/v4/banners"
+	res, err := sd.request(context.TODO(), "GET", path, nil)
+	if err != nil {
+		return []bannerResponse{}, err
+	}
+	defer res.Body.Close()
+
+	banners := new([]bannerResponse)
+	err = json.NewDecoder(res.Body).Decode(banners)
+
+	return *banners, nil
 }
 
 func (sd *SDAPI) PostEvent(pipelineID string, startFrom string, retried bool) error {

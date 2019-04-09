@@ -208,6 +208,27 @@ func main() {
 				}
 				return nil
 			},
+
+		}, {
+			Name:    "banner",
+			Usage:   "habdle sd banners",
+			Subcommands: []cli.Command{
+				{
+					Name:    "get",
+					Usage:   "get banners",
+					Action: func(c *cli.Context) error {
+						banners, err := api.GetBanners()
+						if err != nil {
+							failureExit(err)
+						}
+						fmt.Println("ID\tMessage")
+						for _, b := range banners {
+							fmt.Printf("%v\t%v\n", b.ID, b.Message)
+						}
+						return nil
+					},
+				},
+			},
 		}, {
 			Name:    "validate",
 			Aliases: []string{"v"},

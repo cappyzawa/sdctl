@@ -126,6 +126,63 @@ func TestGetJWT(t *testing.T) {
 	}
 }
 
+func TestGetBanners(t *testing.T) {
+	cases := map[string]struct {
+		expectedResult   bool
+		expectedResponse string
+	}{
+		"Get Banners successfully": {
+			true,
+			"testdata/banner.json",
+		},
+	}
+
+	for k, v := range cases {
+		k := k
+		v := v
+
+		t.Run(k, func(t *testing.T) {
+
+			muxAPI := http.NewServeMux()
+			testAPIServer := httptest.NewServer(muxAPI)
+			defer testAPIServer.Close()
+
+			path := "/v4/banners"
+			mockSDContext.APIURL = testAPIServer.URL
+			muxAPI.HandleFunc(path, func(w http.ResponseWriter, r *http.Request) {
+				if !v.expectedResult {
+					w.WriteHeader(http.StatusUnauthorized)
+				}
+				http.ServeFile(w, r, v.expectedResponse)
+			})
+
+			sdapi, err := New(mockSDContext, nil)
+			if err != nil {
+				t.Fatal("should not cause error")
+			}
+
+			banners, err := sdapi.GetBanners()
+			switch v.expectedResult {
+			case true:
+				if err != nil {
+					t.Errorf("error should be nil but: '%v'", err)
+				}
+				b := banners[0]
+				expected := "Due to planned upgrade of Kubernetes, Screwdriver will be down"
+				if b.ID != 0 || b.Message != expected {
+					t.Errorf("response should be equal with dummy date but: '%v' and '%v'", b.ID, b.Message)
+				}
+			case false:
+				if err == nil {
+					t.Errorf("error should not be nil but nil")
+				} else {
+					fmt.Printf("%v\n", err)
+				}
+			}
+		})
+	}
+}
+
 func TestPostEvent(t *testing.T) {
 	cases := map[string]struct {
 		expectedResult        bool
